@@ -1,5 +1,6 @@
 from numpy import ndarray
 import matplotlib.pyplot as plt
+from cv2 import resize
 from math import ceil
 
 
@@ -27,6 +28,10 @@ class ImgUtils:
             Imgs must be (0, 1) to show.
         """
         return ((img + 1) / 2).clip(0, 1)
+
+    @staticmethod
+    def resize_img(img: ndarray, dims: tuple[int, int]) -> ndarray:
+        return resize(img, dims)
 
     @staticmethod
     def show_images(imgs: list[ndarray], cols: int = 3, size: int = 4,
