@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 from cv2 import resize
 from math import ceil
 
+from typing import List, Tuple
+
 
 class ImgUtils:
     @staticmethod
@@ -30,12 +32,12 @@ class ImgUtils:
         return ((img + 1) / 2).clip(0, 1)
 
     @staticmethod
-    def resize_img(img: ndarray, dims: tuple[int, int]) -> ndarray:
+    def resize_img(img: ndarray, dims: Tuple[int, int]) -> ndarray:
         return resize(img, dims)
 
     @staticmethod
-    def show_images(imgs: list[ndarray], cols: int = 3, size: int = 4,
-                    title: str = None, subtitles: list[str] = None) -> None:
+    def show_images(imgs: List[ndarray], cols: int = 3, size: int = 4,
+                    title: str = None, subtitles: List[str] = None) -> None:
         """
             Use matplotlib to show a list of images.
 

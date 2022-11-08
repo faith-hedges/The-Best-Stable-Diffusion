@@ -6,7 +6,7 @@
 from keras.models import Model
 from keras.layers import Conv2D, MaxPooling2D, UpSampling2D, Concatenate, Input
 # Layer = Conv2D | MaxPooling2D | UpSampling2D | Concatenate | Input # 3.11 typing (no tensorflow yet)
-from typing import Union
+from typing import Union, Tuple
 Layer = Union[Conv2D, MaxPooling2D, UpSampling2D, Concatenate, Input]
 
 
@@ -35,7 +35,7 @@ class UNet():
         return Model(inputs, outputs)
 
     @staticmethod
-    def down(inp: Layer, n_filters: int, kernel_size=(3, 3), padding="same", strides=1) -> tuple[Layer, Layer]:
+    def down(inp: Layer, n_filters: int, kernel_size=(3, 3), padding="same", strides=1) -> Tuple[Layer, Layer]:
         """ 
         Run the input through two convolutional layers, then return that 
         output as well as a 2x downscale. One output for skip, one not.
