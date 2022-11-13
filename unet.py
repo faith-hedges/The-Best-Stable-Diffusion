@@ -11,21 +11,21 @@ Layer = Union[Conv2D, MaxPooling2D, UpSampling2D, Concatenate, Input]
 
 
 class UNet():
-    """ A down-then-up-scaling network with skip connections, assumes 256x256 """
+    """ A down-then-up-scaling network with skip connections """
     @staticmethod
-    def new() -> Model:
-        inputs = Input((256, 256, 3))
-        filter_nums = [16, 32, 64, 128, 256]
+    def new() -> Model: # TODO: abstract img size
+        inputs = Input((64, 64, 3))
+        filter_nums = [16, 32, 48, 64] # , 128 , 256]
 
         skip1, down1 = UNet.down(inputs, filter_nums[0])  # \
         skip2, down2 = UNet.down(down1, filter_nums[1])  # \
         skip3, down3 = UNet.down(down2, filter_nums[2])  # \
-        skip4, down4 = UNet.down(down3, filter_nums[3])  # \
+        # skip4, down4 = UNet.down(down3, filter_nums[3])  # \
 
-        bn = UNet.bottleneck(down4, filter_nums[4])  # -
+        bn = UNet.bottleneck(down3, filter_nums[3])  # -
 
-        up1 = UNet.up(bn, skip4, filter_nums[3])  # /
-        up2 = UNet.up(up1, skip3, filter_nums[2])  # /
+        # up1 = UNet.up(bn, skip4, filter_nums[3])  # /
+        up2 = UNet.up(bn, skip3, filter_nums[2])  # /
         up3 = UNet.up(up2, skip2, filter_nums[1])  # /
         up4 = UNet.up(up3, skip1, filter_nums[0])  # /
 
