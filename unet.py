@@ -13,25 +13,33 @@ Layer = Union[Conv2D, MaxPooling2D, UpSampling2D, Concatenate, Input]
 class UNet():
     """ A down-then-up-scaling network with skip connections """
     @staticmethod
-    def new() -> Model: # TODO: abstract img size
-        inputs = Input((64, 64, 3))
-        filter_nums = [16, 32, 48, 64] # , 128 , 256]
+    def new(img_length = 64, n_downblocks = 4, downscale_factor=2) -> Model:
+        # start with a simple input layer
+        inputs = Input((img_length, img_length, 3))
 
-        skip1, down1 = UNet.down(inputs, filter_nums[0])  # \
-        skip2, down2 = UNet.down(down1, filter_nums[1])  # \
-        skip3, down3 = UNet.down(down2, filter_nums[2])  # \
-        # skip4, down4 = UNet.down(down3, filter_nums[3])  # \
+        # filter_nums starts at img_length and gets divided by downscale_factor each time
+        filter_nums = [img_length]
+        for _ in range(1, n_downblocks+1):
+            filter_nums.append(filter_nums[-1] // downscale_factor)
 
-        bn = UNet.bottleneck(down3, filter_nums[3])  # -
+        # Form the down-blocks and skip connections
+        skip_down_pairs = [UNet.down(inputs, filter_nums[0])]
+        for i in range(1, n_downblocks):
+            skip_down_pairs.append(UNet.down(skip_down_pairs[-1][1], filter_nums[i]))
 
-        # up1 = UNet.up(bn, skip4, filter_nums[3])  # /
-        up2 = UNet.up(bn, skip3, filter_nums[2])  # /
-        up3 = UNet.up(up2, skip2, filter_nums[1])  # /
-        up4 = UNet.up(up3, skip1, filter_nums[0])  # /
+        # Form the bottleneck
+        bn = UNet.bottleneck(skip_down_pairs[-1][1], filter_nums[-1])
 
+        # Form the up-blocks
+        ups = [UNet.up(bn, skip_down_pairs[-1][0], filter_nums[-2])]
+        for i in range(1, n_downblocks):
+            ups.append(UNet.up(ups[-1], skip_down_pairs[-i-1][0], filter_nums[-i-2]))
+
+        # Output layer
         outputs = Conv2D(3, (3, 3), padding="same",
-                         strides=1, activation="relu")(up4)
+                         strides=1, activation="relu")(ups[-1])
 
+        assert len(filter_nums) - 1 == len(skip_down_pairs) == len(ups)
         return Model(inputs, outputs)
 
     @staticmethod
