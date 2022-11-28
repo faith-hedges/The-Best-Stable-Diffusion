@@ -21,6 +21,7 @@ class UNet():
         filter_nums = [img_length]
         for _ in range(1, n_downblocks+1):
             filter_nums.append(filter_nums[-1] // downscale_factor)
+        filter_nums.reverse()
 
         # Form the down-blocks and skip connections
         skip_down_pairs = [UNet.down(inputs, filter_nums[0])]
@@ -45,21 +46,23 @@ class UNet():
     @staticmethod
     def down(inp: Layer, n_filters: int, kernel_size=(3, 3), padding="same", strides=1) -> Tuple[Layer, Layer]:
         """ 
-        Run the input through two convolutional layers, then return that 
+        Run the input through three convolutional layers, then return that 
         output as well as a 2x downscale. One output for skip, one not.
         """
         conv1 = Conv2D(n_filters, kernel_size,
                        padding=padding, strides=strides, activation="relu")(inp)
         conv2 = Conv2D(n_filters, kernel_size,
                        padding=padding, strides=strides, activation="relu")(conv1)
-        shrink = MaxPooling2D((2, 2), (2, 2))(conv2)
+        conv3 = Conv2D(n_filters, kernel_size,
+                       padding=padding, strides=strides, activation="relu")(conv2)
+        shrink = MaxPooling2D((2, 2), (2, 2))(conv3)
         return conv2, shrink  # conv2 is "skipped" forward, shrink continues down through the U
 
     @staticmethod
     def up(inp: Layer, skip: Layer, n_filters: int, kernel_size=(3, 3), padding="same", strides=1) -> Layer:
         """
         Combine the input from the U with the skip layer, then run
-        that through two convolutional layers and return the output.
+        that through three convolutional layers and return the output.
         """
         expand = UpSampling2D((2, 2))(inp)
         combin = Concatenate()([expand, skip])
@@ -67,15 +70,19 @@ class UNet():
                        padding=padding, strides=strides, activation="relu")(combin)
         conv2 = Conv2D(n_filters, kernel_size,
                        padding=padding, strides=strides, activation="relu")(conv1)
-        return conv2
+        conv3 = Conv2D(n_filters, kernel_size,
+                       padding=padding, strides=strides, activation="relu")(conv2)
+        return conv3
 
     @staticmethod
     def bottleneck(inp: Layer, n_filters, kernel_size=(3, 3), padding="same", strides=1) -> Layer:
         """
-        Just two convolutional layers, no down/up sampling
+        Just three convolutional layers, no down/up sampling
         """
         conv1 = Conv2D(n_filters, kernel_size,
                        padding=padding, strides=strides, activation="relu")(inp)
         conv2 = Conv2D(n_filters, kernel_size,
                        padding=padding, strides=strides, activation="relu")(conv1)
-        return conv2
+        conv3 = Conv2D(n_filters, kernel_size,
+                       padding=padding, strides=strides, activation="relu")(conv2)
+        return conv3
